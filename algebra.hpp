@@ -26,6 +26,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iterator>
 
 #ifndef PI
 #define PI		3.14159265358979323846
@@ -36,7 +37,7 @@
 
 #define toRad(a)	a * PI / 180.0
 #define toDeg(r)	r * 180.0 / PI;
-#define fabs(x) ( ((x) > 0) ? x : -x )
+#define fabs(x) (((x) > 0) ? x : -x)
 #define sign(x) (((x) < 0) ? -1 : 1)
 
 // TODO(orglofch): Possible combine Vector and Point
@@ -111,6 +112,11 @@ Vector2 operator / (const Vector2 &a, const double s) {
 	return Vector2(a.x / s, a.y / s);
 }
 
+inline
+bool operator == (const Vector2 &v1, const Vector2 &v2) {
+	return v1.x == v2.x && v1.y == v2.y;
+}
+
 union Point2
 {
 	Point2() {
@@ -154,8 +160,18 @@ private:
 };
 
 inline
+Vector2 operator - (const Vector2 &v) {
+	return Vector2(-v.x, -v.y);
+}
+
+inline
 Vector2 operator - (const Point2 &a, const Point2 &b) {
 	return Vector2(a.x - b.x, a.y - b.y);
+}
+
+inline
+bool operator == (const Point2 &p1, const Point2 &p2) {
+	return p1.x == p2.x && p1.y == p2.y;
 }
 
 union Vector3
@@ -183,7 +199,7 @@ union Vector3
 			x * other.y - y * other.x);
 	}
 
-	// TODO(orglofch): Remove / Replace
+	// TODO(orglofch): Remove / Replace with .xyz
 	const double *begin() const {
 		return (double*)d;
 	}
@@ -247,20 +263,16 @@ union Vector3
 		z += other.z;
 	}
 
-	Vector3 operator /= (const double s) {
+	void operator /= (const double s) {
 		x /= s;
 		y /= s;
 		z /= s;
-
-		return *this;
 	}
 
-	Vector3 operator *= (const double s) {
+	void operator *= (const double s) {
 		x *= s;
 		y *= s;
 		z *= s;
-
-		return *this;
 	}
 
 	struct
@@ -296,6 +308,11 @@ private:
 };
 
 inline
+Vector3 operator - (const Vector3 &v) {
+	return Vector3(-v.x, -v.y, -v.z);
+}
+
+inline
 Vector3 operator / (const Vector3 &v, const double s) {
 	return Vector3(v.x / s, v.y / s, v.z / s);
 }
@@ -313,6 +330,11 @@ Vector3 operator * (const double s, const Vector3 &v) {
 inline
 Vector3 operator + (const Vector3 &a, const Vector3 &b) {
 	return Vector3(a.x + b.x, a.y + b.y, a.z + b.z);
+}
+
+inline
+bool operator == (const Vector3 &v1, const Vector3 &v2) {
+	return v1.x == v2.x && v1.y == v2.y && v1.z == v2.z;
 }
 
 union Point3
@@ -413,6 +435,11 @@ Point3 operator / (const Point3 &p, const double s) {
 	return Point3(p.x / s, p.y / s, p.z / s);
 }
 
+inline
+bool operator == (const Point3 &p1, const Point3 &p2) {
+	return p1.x == p2.x && p1.y == p2.y && p1.z == p2.z;
+}
+
 union Vector4
 {
 	Vector4() {
@@ -456,55 +483,55 @@ class Matrix4x4
 {
 public:
 	Matrix4x4() {
-		std::fill(v_, v_ + 16, 0.0);
-		v_[0] = 1.0;
-		v_[5] = 1.0;
-		v_[10] = 1.0;
-		v_[15] = 1.0;
+		std::fill(d, d + 16, 0.0);
+		d[0] = 1.0;
+		d[5] = 1.0;
+		d[10] = 1.0;
+		d[15] = 1.0;
 	}
-	Matrix4x4(const Matrix4x4& other) {
-		std::copy(other.v_, other.v_ + 16, v_);
+	Matrix4x4(const Matrix4x4& m) {
+		std::copy(m.d, m.d + 16, d);
 	}
 	Matrix4x4(const Vector4 row1, const Vector4 row2, const Vector4 row3,
 		const Vector4 row4) {
-		v_[0] = row1[0];
-		v_[1] = row1[1];
-		v_[2] = row1[2];
-		v_[3] = row1[3];
+		d[0] = row1[0];
+		d[1] = row1[1];
+		d[2] = row1[2];
+		d[3] = row1[3];
 
-		v_[4] = row2[0];
-		v_[5] = row2[1];
-		v_[6] = row2[2];
-		v_[7] = row2[3];
+		d[4] = row2[0];
+		d[5] = row2[1];
+		d[6] = row2[2];
+		d[7] = row2[3];
 
-		v_[8] = row3[0];
-		v_[9] = row3[1];
-		v_[10] = row3[2];
-		v_[11] = row3[3];
+		d[8] = row3[0];
+		d[9] = row3[1];
+		d[10] = row3[2];
+		d[11] = row3[3];
 
-		v_[12] = row4[0];
-		v_[13] = row4[1];
-		v_[14] = row4[2];
-		v_[15] = row4[3];
+		d[12] = row4[0];
+		d[13] = row4[1];
+		d[14] = row4[2];
+		d[15] = row4[3];
 	}
 	Matrix4x4(double *vals) {
-		std::copy(vals, vals + 16, (double*)v_);
+		std::copy(vals, vals + 16, stdext::checked_array_iterator<double*>(d, 16));
 	}
 
-	Matrix4x4& operator=(const Matrix4x4& other) {
-		std::copy(other.v_, other.v_ + 16, v_);
+	Matrix4x4& operator = (const Matrix4x4 &m) {
+		std::copy(m.d, m.d + 16, d);
 		return *this;
 	}
 
 	Vector4 getRow(size_t row) const {
-		return Vector4(v_[4 * row], v_[4 * row + 1], v_[4 * row + 2], v_[4 * row + 3]);
+		return Vector4(d[4 * row], d[4 * row + 1], d[4 * row + 2], d[4 * row + 3]);
 	}
 	double *getRow(size_t row) {
-		return (double*)v_ + 4 * row;
+		return (double*)d + 4 * row;
 	}
 
 	Vector4 getColumn(size_t col) const {
-		return Vector4(v_[col], v_[4 + col], v_[8 + col], v_[12 + col]);
+		return Vector4(d[col], d[4 + col], d[8 + col], d[12 + col]);
 	}
 
 	Vector4 operator[](size_t row) const {
@@ -573,28 +600,88 @@ public:
 	}
 
 	const double *begin() const {
-		return (double*)v_;
+		return (double*)d;
 	}
 	const double *end() const {
 		return begin() + 16;
 	}
 
+	static Matrix4x4 rotation(const Point3 &eye, const Vector3 &view, const Vector3 &up) {
+		Vector3 w = view;
+		w.normalize();
+
+		Vector3 u = up.cross(w);
+		u.normalize();
+
+		Vector3 v = w.cross(u);
+
+		return Matrix4x4(Vector4(u.x, v.x, w.x, 0),
+			Vector4(u.y, v.y, w.y, 0),
+			Vector4(u.z, v.z, w.z, 0),
+			Vector4(0, 0, 0, 1));
+	}
+
+	static Matrix4x4 rotation(char axis, double angle) {
+		switch (axis) {
+		case 'x':
+		case 'X':
+			return Matrix4x4(Vector4(1, 0, 0, 0),
+				Vector4(0, cos(toRad(angle)), -sin(toRad(angle)), 0),
+				Vector4(0, sin(toRad(angle)), cos(toRad(angle)), 0),
+				Vector4(0, 0, 0, 1));
+		case 'y':
+		case 'Y':
+			return Matrix4x4(Vector4(cos(toRad(angle)), 0, sin(toRad(angle)), 0),
+				Vector4(0, 1, 0, 0),
+				Vector4(-sin(toRad(angle)), 0, cos(toRad(angle)), 0),
+				Vector4(0, 0, 0, 1));
+		case 'z':
+		case 'Z':
+			return Matrix4x4(Vector4(cos(toRad(angle)), -sin(toRad(angle)), 0, 0),
+				Vector4(sin(toRad(angle)), cos(toRad(angle)), 0, 0),
+				Vector4(0, 0, 1, 0),
+				Vector4(0, 0, 0, 1));
+		default:
+			return Matrix4x4();
+		}
+	}
+
+	static Matrix4x4 translation(double x, double y, double z) {
+		return Matrix4x4(Vector4(1, 0, 0, x),
+			Vector4(0, 1, 0, y),
+			Vector4(0, 0, 1, z),
+			Vector4(0, 0, 0, 1));
+	}
+	static Matrix4x4 translation(const Vector3 &v) {
+		return translation(v.x, v.y, v.z);
+	}
+
+	static Matrix4x4 scaling(double x, double y, double z) {
+		return Matrix4x4(Vector4(x, 0, 0, 0),
+			Vector4(0, y, 0, 0),
+			Vector4(0, 0, z, 0),
+			Vector4(0, 0, 0, 1));
+	}
+	static Matrix4x4 scaling(const Vector3 &v) {
+		return scaling(v.x, v.y, v.z);
+	}
+
 private:
-	double v_[16];
+	double d[16];
 };
 
 inline
-Vector3 operator *(const Matrix4x4 &M, const Vector3 &v) {
-	return Vector3(v.x * M[0][0] + v.y * M[0][1] + v.z * M[0][2],
-		v.x * M[1][0] + v.y * M[1][1] + v.z * M[1][2],
-		v.x * M[2][0] + v.y * M[2][1] + v.z * M[2][2]);
+Vector3 operator *(const Matrix4x4 &m, const Vector3 &v) {
+	return Vector3(v.x * m[0][0] + v.y * m[0][1] + v.z * m[0][2],
+		v.x * m[1][0] + v.y * m[1][1] + v.z * m[1][2],
+		v.x * m[2][0] + v.y * m[2][1] + v.z * m[2][2]);
 }
 
 inline
-Point3 operator *(const Matrix4x4 &M, const Point3 &p) {
-	return Point3(p.x * M[0][0] + p.y * M[0][1] + p.z * M[0][2] + M[0][3],
-		p.x * M[1][0] + p.y * M[1][1] + p.z * M[1][2] + M[1][3],
-		p.x * M[2][0] + p.y * M[2][1] + p.z * M[2][2] + M[2][3]);
+Point3 operator *(const Matrix4x4 &m, const Point3 &p) {
+	return Point3(p.x * m[0][0] + p.y * m[0][1] + p.z * m[0][2] + m[0][3],
+		p.x * m[1][0] + p.y * m[1][1] + p.z * m[1][2] + m[1][3],
+		p.x * m[2][0] + p.y * m[2][1] + p.z * m[2][2] + m[2][3]);
 }
 
 inline
@@ -613,68 +700,11 @@ Matrix4x4 operator *(const Matrix4x4& a, const Matrix4x4& b) {
 	return ret;
 }
 
-inline
-Matrix4x4 rotation(const Point3 &eye, const Vector3 &view, const Vector3 &up) {
-	Vector3 w = view;
-	w.normalize();
-
-	Vector3 u = up.cross(w);
-	u.normalize();
-
-	Vector3 v = w.cross(u);
-
-	return Matrix4x4(Vector4(u.x, v.x, w.x, 0),
-		Vector4(u.y, v.y, w.y, 0),
-		Vector4(u.z, v.z, w.z, 0),
-		Vector4(0, 0, 0, 1));
-}
-
-inline
-Matrix4x4 rotation(char axis, double angle) {
-	switch (axis) {
-	case 'x':
-	case 'X':
-		return Matrix4x4(Vector4(1, 0, 0, 0),
-			Vector4(0, cos(toRad(angle)), -sin(toRad(angle)), 0),
-			Vector4(0, sin(toRad(angle)), cos(toRad(angle)), 0),
-			Vector4(0, 0, 0, 1));
-	case 'y':
-	case 'Y':
-		return Matrix4x4(Vector4(cos(toRad(angle)), 0, sin(toRad(angle)), 0),
-			Vector4(0, 1, 0, 0),
-			Vector4(-sin(toRad(angle)), 0, cos(toRad(angle)), 0),
-			Vector4(0, 0, 0, 1));
-	case 'z':
-	case 'Z':
-		return Matrix4x4(Vector4(cos(toRad(angle)), -sin(toRad(angle)), 0, 0),
-			Vector4(sin(toRad(angle)), cos(toRad(angle)), 0, 0),
-			Vector4(0, 0, 1, 0),
-			Vector4(0, 0, 0, 1));
-	default:
-		return Matrix4x4();
-	}
-}
-
-inline
-Matrix4x4 translation(const Vector3 &amount) {
-	return Matrix4x4(Vector4(1, 0, 0, amount.x),
-		Vector4(0, 1, 0, amount.y),
-		Vector4(0, 0, 1, amount.z),
-		Vector4(0, 0, 0, 1));
-}
-
-inline
-Matrix4x4 scaling(const Vector3 &amount) {
-	return Matrix4x4(Vector4(amount[0], 0, 0, 0),
-		Vector4(0, amount[1], 0, 0),
-		Vector4(0, 0, amount[2], 0),
-		Vector4(0, 0, 0, 1));
-}
-
 double sink_lookup(double), cosk_lookup(double);
 static double PolishRoot(
 	size_t degree, double A, double B, double C, double D, double root);
 
+inline
 size_t quadraticRoots(double A, double B, double C, double roots[2]) {
 	double D;
 	double q;
@@ -705,6 +735,7 @@ size_t quadraticRoots(double A, double B, double C, double roots[2]) {
 	}
 }
 
+inline
 size_t cubicRoots(double p, double q, double r, double roots[3]) {
 	register double u, v, w, s, t, cosk, sink, p_over_3, k;
 	/* int i; */
@@ -750,6 +781,7 @@ size_t cubicRoots(double p, double q, double r, double roots[3]) {
 	}
 }
 
+inline
 size_t quarticRoots(
 	double a, double b, double c, double d, double roots[4]) {
 	double h, h1, h2, H, g, g1, g2, G, n, m, en, em, y;

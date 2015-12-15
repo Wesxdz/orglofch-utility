@@ -21,8 +21,8 @@
 *    distribution.
 */
 
-#ifndef _IMAGE_UTIL_HPP_
-#define _IMAGE_UTIL_HPP_
+#ifndef _IMAGE_HPP_
+#define _IMAGE_HPP_
 
 #include <iostream>
 

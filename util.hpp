@@ -29,6 +29,7 @@
 #include <cmath>
 #include <cstdio>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <string>
 
@@ -37,10 +38,12 @@
 #endif
 
 #define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
-#define LOG(fmt, ...) do { if (_DEBUG) { fprintf(stderr, "%s:%d: " fmt, __FILENAME__, __LINE__, __VA_ARGS__); } } while(0)
+#define LOG(fmt, ...) do { if (_DEBUG) { fprintf(stderr, "%s:%d " fmt, __FILENAME__, __LINE__, __VA_ARGS__); } } while(0)
 
 #define NOT_REACHED() assert(false)
 #define NOT_NULL(data) assert(data)
+#define ASSERT_TRUE(check) assert(check)
+#define ASSERT_FALSE(check) ASSERT_TRUE(!check)
 
 inline
 std::string ReadFile(const char *filename) {
@@ -55,6 +58,11 @@ std::string ReadFile(const char *filename) {
 	file.close();
 
 	return file_data.str();
+}
+
+inline
+void clamp(double *val, double min, double max) {
+	*val = std::min(max, std::max(min, *val));
 }
 
 inline
