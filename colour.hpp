@@ -24,6 +24,8 @@
 #ifndef _COLOUR_HPP_
 #define _COLOUR_HPP_
 
+#include <cstdio>
+
 #include "util.hpp"
 
 union Colour
@@ -38,21 +40,21 @@ union Colour
 		b = _b;
 		a = 1;
 	}
-	Colour(float _r, float _g, float _b, float _q) {
+	Colour(float _r, float _g, float _b, float _a) {
 		r = _r;
 		g = _g;
 		b = _b;
 		a = _a;
 	}
 
-	void operator +=(const Colour &other) {
+	void operator += (const Colour &other) {
 		r += other.r;
 		g += other.g;
 		b += other.b;
 		a += other.a;
 	}
 
-	void operator /=(const float s) {
+	void operator /= (const float s) {
 		r /= s;
 		g /= s;
 		b /= s;
@@ -102,6 +104,22 @@ Colour operator /(const Colour &c, const float s) {
 inline
 Colour operator -(const Colour &a, const Colour &b) {
 	return Colour(a.r - b.r, a.g - b.g, a.b - b.b);
+}
+
+inline
+bool operator == (const Colour &a, const Colour &b) {
+	return a.r == b.r && a.g == b.g && a.b == b.b;
+}
+
+inline
+bool operator != (const Colour &a, const Colour &b) {
+	return a.r != b.r || a.g != b.g || a.b != b.b;
+}
+
+inline
+std::ostream &operator << (std::ostream &os, const Colour &c) {
+	os << "[" << c.r << " " << c.g << " " << c.b << " " << c.a << "]";
+	return os;
 }
 
 #endif

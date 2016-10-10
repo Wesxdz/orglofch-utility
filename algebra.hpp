@@ -40,7 +40,6 @@
 #define fabs(x) (((x) > 0) ? x : -x)
 #define sign(x) (((x) < 0) ? -1 : 1)
 
-// TODO(orglofch): Possible combine Vector and Point
 union Vector2
 {
 	Vector2() {
@@ -103,6 +102,11 @@ private:
 };
 
 inline
+Vector2 operator - (const Vector2 &v) {
+	return Vector2(-v.x, -v.y);
+}
+
+inline
 Vector2 operator - (const Vector2 &a, const Vector2 &b) {
 	return Vector2(a.x - b.x, a.y - b.y);
 }
@@ -160,8 +164,9 @@ private:
 };
 
 inline
-Vector2 operator - (const Vector2 &v) {
-	return Vector2(-v.x, -v.y);
+std::ostream &operator << (std::ostream &os, const Point2 &p) {
+	os << "[" << p.x << ", " << p.y << "]";
+	return os;
 }
 
 inline
@@ -173,6 +178,38 @@ inline
 bool operator == (const Point2 &p1, const Point2 &p2) {
 	return p1.x == p2.x && p1.y == p2.y;
 }
+
+union Size
+{
+	Size() {
+		width = height = 0;
+	}
+	Size(int _width, int _height) {
+		width = _width;
+		height = _height;
+	}
+
+	Point2 center() const {
+		return Point2(width / 2, height / 2);
+	}
+
+	int area() const {
+		return width * height;
+	}
+
+	struct
+	{
+		int width;
+		int height;
+	};
+	struct
+	{
+		int x;
+		int y;
+	};
+private:
+	double d[2];
+};
 
 union Vector3
 {
@@ -671,21 +708,21 @@ private:
 };
 
 inline
-Vector3 operator *(const Matrix4x4 &m, const Vector3 &v) {
+Vector3 operator * (const Matrix4x4 &m, const Vector3 &v) {
 	return Vector3(v.x * m[0][0] + v.y * m[0][1] + v.z * m[0][2],
 		v.x * m[1][0] + v.y * m[1][1] + v.z * m[1][2],
 		v.x * m[2][0] + v.y * m[2][1] + v.z * m[2][2]);
 }
 
 inline
-Point3 operator *(const Matrix4x4 &m, const Point3 &p) {
+Point3 operator * (const Matrix4x4 &m, const Point3 &p) {
 	return Point3(p.x * m[0][0] + p.y * m[0][1] + p.z * m[0][2] + m[0][3],
 		p.x * m[1][0] + p.y * m[1][1] + p.z * m[1][2] + m[1][3],
 		p.x * m[2][0] + p.y * m[2][1] + p.z * m[2][2] + m[2][3]);
 }
 
 inline
-Matrix4x4 operator *(const Matrix4x4& a, const Matrix4x4& b) {
+Matrix4x4 operator * (const Matrix4x4& a, const Matrix4x4& b) {
 	Matrix4x4 ret;
 
 	for (size_t i = 0; i < 4; ++i) {
