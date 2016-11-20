@@ -38,7 +38,7 @@ union Colour
 		b = _b;
 		a = 1;
 	}
-	Colour(float _r, float _g, float _b, float _q) {
+	Colour(float _r, float _g, float _b, float _a) {
 		r = _r;
 		g = _g;
 		b = _b;
@@ -70,7 +70,6 @@ union Colour
 	{
 		float r, g, b, a;
 	};
-private:
 	float d[4];
 };
 

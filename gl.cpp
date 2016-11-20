@@ -1,6 +1,19 @@
 #include "gl.hpp"
 
-std::unordered_map<std::string, Shader> loaded_shaders;
+std::unordered_map<std::string, GLuint> loaded_shaders;
+
+int PrintGLError(char *file, int line) {
+	GLenum glErr;
+	int    retCode = 0;
+
+	glErr = glGetError();
+	if (glErr != GL_NO_ERROR) {
+		printf("glError in file %s @ line %d: %s\n",
+			file, line, gluErrorString(glErr));
+		retCode = 1;
+	}
+	return retCode;
+}
 
 GLuint glLoadShader(const std::string &vs_filename, const std::string &fs_filename) {
 	// Try to retrieve the shader from the already loaded shaders
@@ -35,7 +48,7 @@ GLuint glLoadShader(const std::string &vs_filename, const std::string &fs_filena
 	glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &compiled);
 	if (compiled == false) {
 		printf("Vertex shader not compliled\n");
-		glPrintShaderInfo(vertex_shader);
+		glPrintProgramInfo(vertex_shader);
 
 		glDeleteShader(vertex_shader);
 		glDeleteShader(fragment_shader);
@@ -47,7 +60,7 @@ GLuint glLoadShader(const std::string &vs_filename, const std::string &fs_filena
 	glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &compiled);
 	if (compiled == false) {
 		printf("Fragment shader not compiled\n");
-		glPrintShaderInfo(fragment_shader);
+		glPrintProgramInfo(fragment_shader);
 
 		glDeleteShader(vertex_shader);
 		glDeleteShader(fragment_shader);
@@ -94,43 +107,51 @@ GLuint glLoadShader(const std::string &vs_filename, const std::string &fs_filena
 	return shader;
 }
 
-void glPrintShaderInfo(Shader shader) {
+void glPrintProgramInfo(GLuint program) {
 	int info_log_len = 0;
 	int char_written = 0;
 	GLchar *info_log;
 
-	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &info_log_len);
+	glGetShaderiv(program, GL_INFO_LOG_LENGTH, &info_log_len);
 
 	if (info_log_len > 0) {
 		info_log = new GLchar[info_log_len];
-		glGetShaderInfoLog(shader, info_log_len, &char_written, info_log);
+		glGetShaderInfoLog(program, info_log_len, &char_written, info_log);
 		printf("Info: %s\n", info_log);
 		delete[] info_log;
 	}
 }
 
-int PrintGLError(char *file, int line) {
-	GLenum glErr;
-	int    retCode = 0;
-
-	glErr = glGetError();
-	if (glErr != GL_NO_ERROR) {
-		printf("glError in file %s @ line %d: %s\n",
-			file, line, gluErrorString(glErr));
-		retCode = 1;
-	}
-	return retCode;
+void glUseShader(const Shader &shader) {
+	glUseProgram(shader.program);
 }
 
-// TODO(orglofch): Use vbo
+Uniform glGetUniform(const Shader &shader, const std::string &name) {
+	return glGetUniformLocation(shader.program, name.c_str());
+}
+
 // TODO(orglofch): Possibly remove attributes and force use of transforms
 void glDrawRect(float left, float right, float bottom, float top, float depth) {
 	glBegin(GL_QUADS);
 	glTexCoord2f(0, 0); glVertex3f(left, bottom, depth);
-	glTexCoord2f(1, 0); glVertex3f(right, bottom, depth);
-	glTexCoord2f(1, 1); glVertex3f(right, top, depth);
 	glTexCoord2f(0, 1); glVertex3f(left, top, depth);
+	glTexCoord2f(1, 1); glVertex3f(right, top, depth);
+	glTexCoord2f(1, 0); glVertex3f(right, bottom, depth);
 	glEnd();
+}
+
+// TODO(orglofch): Remove probably
+void glDrawTexturedQuad(GLuint texture) {
+	glEnable(GL_TEXTURE_2D);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0, 0.0); glVertex3f(-1.0, -1.0, -0.0);
+	glTexCoord2f(0.0, 1.0); glVertex3f(1.0, -1.0, -0.0);
+	glTexCoord2f(1.0, 1.0); glVertex3f(1.0, 1.0, -0.0);
+	glTexCoord2f(1.0, 0.0); glVertex3f(-1.0, 1.0, -0.0);
+	glEnd();
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void glCreateTexture1D(Texture *texture, int width, int channels, void *data) {

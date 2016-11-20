@@ -98,7 +98,6 @@ union Vector2
 	{
 		double u, v;
 	};
-private:
 	double d[2];
 };
 
@@ -155,7 +154,6 @@ union Point2
 	{
 		double x, y;
 	};
-private:
 	double d[2];
 };
 
@@ -197,11 +195,6 @@ union Vector3
 		return Vector3(y * other.z - z * other.y,
 			z * other.x - x * other.z,
 			x * other.y - y * other.x);
-	}
-
-	// TODO(orglofch): Remove / Replace with .xyz
-	const double *begin() const {
-		return (double*)d;
 	}
 
 	double normalize() {
@@ -303,7 +296,6 @@ union Vector3
 		double UNUSED_2;
 		Vector2 vw;
 	};
-private:
 	double d[3];
 };
 
@@ -337,6 +329,12 @@ bool operator == (const Vector3 &v1, const Vector3 &v2) {
 	return v1.x == v2.x && v1.y == v2.y && v1.z == v2.z;
 }
 
+inline
+std::ostream &operator << (std::ostream &os, const Vector3 &v) {
+	os << "[" << v.d[0] << ", " << v.d[1] << ", " << v.d[2] << "]";
+	return os;
+}
+
 union Point3
 {
 	Point3() {
@@ -351,11 +349,6 @@ union Point3
 		x = (double)_x;
 		y = (double)_y;
 		z = (double)_z;
-	}
-
-	// TODO(orglofch): Remove / Replace
-	const double *begin() const {
-		return (double*)d;
 	}
 
 	Point3 &operator =(const Point3 &other) {
@@ -399,7 +392,6 @@ union Point3
 		double UNUSED_1;
 		Vector2 yz;
 	};
-private:
 	double d[3];
 };
 
@@ -440,6 +432,12 @@ bool operator == (const Point3 &p1, const Point3 &p2) {
 	return p1.x == p2.x && p1.y == p2.y && p1.z == p2.z;
 }
 
+inline
+std::ostream &operator << (std::ostream &os, const Point3 &p) {
+	os << "[" << p.d[0] << ", " << p.d[1] << ", " << p.d[2] << "]";
+	return os;
+}
+
 union Vector4
 {
 	Vector4() {
@@ -474,11 +472,9 @@ union Vector4
 		double UNUSED_1;
 		Vector3 yzw;
 	};
-private:
 	double d[4];
 };
 
-// TODO(orglofch): Update
 class Matrix4x4
 {
 public:
@@ -599,13 +595,6 @@ public:
 		return ret;
 	}
 
-	const double *begin() const {
-		return (double*)d;
-	}
-	const double *end() const {
-		return begin() + 16;
-	}
-
 	static Matrix4x4 rotation(const Point3 &eye, const Vector3 &view, const Vector3 &up) {
 		Vector3 w = view;
 		w.normalize();
@@ -666,26 +655,37 @@ public:
 		return scaling(v.x, v.y, v.z);
 	}
 
-private:
+	static Matrix4x4 orthographic(double l, double r,
+			double b, double t,
+			double n, double f) {
+		double rsubl = r - l;
+		double fsubn = f - n;
+		double tsubb = t - b;
+		return Matrix4x4(Vector4(2 / rsubl, 0, 0, -(r + l)/rsubl),
+			Vector4(0, 2 / tsubb, 0, -(t + b)/tsubb),
+			Vector4(0, 0, -2 / fsubn, -(f + n)/fsubn),
+			Vector4(0, 0, 0, 1));
+	}
+
 	double d[16];
 };
 
 inline
-Vector3 operator *(const Matrix4x4 &m, const Vector3 &v) {
+Vector3 operator * (const Matrix4x4 &m, const Vector3 &v) {
 	return Vector3(v.x * m[0][0] + v.y * m[0][1] + v.z * m[0][2],
 		v.x * m[1][0] + v.y * m[1][1] + v.z * m[1][2],
 		v.x * m[2][0] + v.y * m[2][1] + v.z * m[2][2]);
 }
 
 inline
-Point3 operator *(const Matrix4x4 &m, const Point3 &p) {
+Point3 operator * (const Matrix4x4 &m, const Point3 &p) {
 	return Point3(p.x * m[0][0] + p.y * m[0][1] + p.z * m[0][2] + m[0][3],
 		p.x * m[1][0] + p.y * m[1][1] + p.z * m[1][2] + m[1][3],
 		p.x * m[2][0] + p.y * m[2][1] + p.z * m[2][2] + m[2][3]);
 }
 
 inline
-Matrix4x4 operator *(const Matrix4x4& a, const Matrix4x4& b) {
+Matrix4x4 operator * (const Matrix4x4& a, const Matrix4x4& b) {
 	Matrix4x4 ret;
 
 	for (size_t i = 0; i < 4; ++i) {
@@ -698,6 +698,16 @@ Matrix4x4 operator *(const Matrix4x4& a, const Matrix4x4& b) {
 	}
 
 	return ret;
+}
+
+inline
+std::ostream &operator << (std::ostream &os, const Matrix4x4 &m) {
+	// TODO(orglofch): Improve
+	os << m.d[0] << " " << m.d[1] << " " << m.d[2] << " " << m.d[3] << std::endl;
+	os << m.d[4] << " " << m.d[5] << " " << m.d[6] << " " << m.d[7] << std::endl;
+	os << m.d[8] << " " << m.d[9] << " " << m.d[10] << " " << m.d[11] << std::endl;
+	os << m.d[12] << " " << m.d[13] << " " << m.d[14] << " " << m.d[15] << std::endl;
+	return os;
 }
 
 double sink_lookup(double), cosk_lookup(double);

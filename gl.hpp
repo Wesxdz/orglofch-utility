@@ -36,18 +36,25 @@
 int PrintGLError(char *file, int line);
 
 typedef GLuint Texture;
-typedef GLuint Shader;
 typedef GLint Uniform;
 
-// TODO(orglofch): Use vbo
-// TODO(orglofch): Possibly remove attributes and force use of transforms
+struct Shader
+{
+	GLuint program = 0;
+};
+
+void glPrintProgramInfo(GLuint program);
+GLuint glLoadShader(const std::string &vs_filename, const std::string &fs_filename);
+void glUseShader(const Shader &shader);
+Uniform glGetUniform(const Shader &shader, const std::string &name);
+
 void glDrawRect(float left, float right, float bottom, float top, float depth);
+void glDrawTexturedQuad(GLuint texture);
 
 void glCreateTexture1D(Texture *texture, int width, int channels, void *data);
 void glCreateTexture2D(Texture *texture, int width, int height, int channels, void *data);
 void glCreateTexture3D(Texture *texture, int width, int height, int depth, int channels, void *data);
 
-// TODO(orglofch): Possibly combine with 2D call above
 void glCreateDepthTexture(Texture *texture);
 
 void glSetPerspectiveProjection(const GLdouble fov, const GLdouble aspect, const GLdouble n, const GLdouble f);
@@ -55,8 +62,5 @@ void glSetPerspectiveProjection(const GLdouble fov, const size_t width,
 	const size_t height, const GLdouble n, const GLdouble f);
 void glSetOrthographicProjection(const GLdouble left, const GLdouble right, const GLdouble bottom,
 	const GLdouble top, const GLdouble n, const GLdouble f);
-
-void glPrintShaderInfo(Shader shader);
-GLuint glLoadShader(const std::string &vs_filename, const std::string &fs_filename);
 
 #endif
