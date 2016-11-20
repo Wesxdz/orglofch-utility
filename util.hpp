@@ -76,6 +76,11 @@ void clamp(int *val, int min, int max) {
 }
 
 inline
+float Rand(int min, int max) {
+	return (max - min) * rand() / RAND_MAX + min;
+}
+
+inline
 float Randf(float min, float max) {
 	return (max - min) * rand() / RAND_MAX + min;
 }

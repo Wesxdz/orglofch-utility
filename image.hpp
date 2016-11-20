@@ -34,20 +34,83 @@
 #include <vector>
 #include <zlib.h>
 
+#include "algebra.hpp"
+#include "colour.hpp"
 #include "util.hpp"
 
-struct Image
+class Image
 {
-	Image() : width(0), height(0), data(NULL) {}
+public:
+	Image() : channels(0), data(NULL) {}
+	Image(const Size &size, int channels)
+		: size(size), channels(channels), data(new float[size.area() * channels]) {}
+	Image(const Size &size, int channels, float *data)
+		: size(size), channels(channels), data(data) {}
 
 	~Image() {
-		if (data)
+		if (data) {
 			delete data;
+		}
 	}
 
-	unsigned int width;
-	unsigned int height;
-	unsigned int channels;
+	/** Create a new image that is this image rotated about its center. */
+	Image *rotate(float angle) const {
+		// TODO(orglofch): This only works for 90 degree angles
+
+		// Perform the inverse rotation to rotate the new image into
+		// the old images coordinate system.
+		Point2 center = size.center();
+		Matrix4x4 transformation =
+			Matrix4x4::translation(center.x, center.y, 0) *
+			Matrix4x4::rotation('z', 90).invert() *
+			Matrix4x4::translation(-center.x, -center.y, 0);
+
+		float *new_data = new float[size.area() * channels];
+		for (int x = 0; x < size.x; ++x) {
+			for (int y = 0; y < size.y; ++y) {
+				int index = (y * size.x + x) * channels;
+
+				Point3 position = transformation * Point3(x, y, 0);
+				// TODO(orglofch): Interpolate between the nearest pixels instead of rounding.
+				position.y = floor(position.y) - 1;
+				int old_index = (position.y * size.x + position.x) * channels;
+				for (int c = 0; c < channels; ++c) {
+					new_data[index + c] = data[old_index + c];
+				}
+			}
+		}
+		return new Image(size, channels, new_data);
+	}
+
+	/** Create a new image this is this image reflect across its center. */
+	Image *reflect(const Vector3 &plane) const {
+		float *new_data = new float[size.area() * channels];
+		for (int i = 0; i < size.area(); ++i) {
+			// TODO(orglofch):
+		}
+		return new Image(size, channels, new_data);
+	}
+
+	void set(int x, int y, int channel, float val) {
+		data[(y * size.x + x) * channels + channel] = val;
+	}
+
+	void set(int x, int y, const Colour &colour) {
+		for (int c = 0; c < channels; ++c) {
+			data[(y * size.x + x) * channels + c] = colour[c];
+		}
+	}
+
+	Colour colour(int x, int y) const {
+		Colour colour;
+		for (int i = 0; i < channels; ++i) {
+			colour[i] = data[(y * size.x + x) * channels + i];
+		}
+		return colour;
+	}
+
+	Size size;
+	int channels;
 	float *data;
 };
 
@@ -75,16 +138,16 @@ bool LoadBMP(const std::string &filename, Image *image) {
 
 	dataPos = *(int*)&(header[0x0A]);
 	imageSize = *(int*)&(header[0x22]);
-	image->width = *(int*)&(header[0x12]);
-	image->height = *(int*)&(header[0x16]);
+	image->size.x = *(int*)&(header[0x12]);
+	image->size.y = *(int*)&(header[0x16]);
 
 	if (imageSize == 0) {
-		imageSize = image->width * image->height * 4;
+		imageSize = image->size.area() * 4;
 		image->channels = 4; // TODO(orglofch): Figure out location
 	}
-	if (dataPos == 0)
+	if (dataPos == 0) {
 		dataPos = 54;
-
+	}
 	image->data = new float[imageSize];
 
 	fread(image->data, 1, imageSize, file);
@@ -95,12 +158,12 @@ bool LoadBMP(const std::string &filename, Image *image) {
 
 // TODO(orglofch): Make easier, merge into structure
 inline
-int DataIndex(unsigned int width,
-unsigned int height,
-unsigned int channels,
-unsigned int x,
-unsigned int y,
-unsigned int c) {
+int dataIndex(unsigned int width,
+		unsigned int height,
+		unsigned int channels,
+		unsigned int x,
+		unsigned int y,
+		unsigned int c) {
 	return channels * ((height - y - 1) * width + x) + c;
 }
 
@@ -176,8 +239,8 @@ bool LoadPNG(const std::string &filename, Image *image) {
 		return false;
 	}
 
-	image->width = png_get_image_width(png_ptr, info_ptr);
-	image->height = png_get_image_height(png_ptr, info_ptr);
+	image->size.x = png_get_image_width(png_ptr, info_ptr);
+	image->size.y = png_get_image_height(png_ptr, info_ptr);
 	switch (colour_type) {
 	case PNG_COLOR_TYPE_RGB:
 		image->channels = 3;
@@ -192,14 +255,14 @@ bool LoadPNG(const std::string &filename, Image *image) {
 
 	png_bytep* row_pointers = png_get_rows(png_ptr, info_ptr);
 
-	image->data = new float[image->width * image->height * image->channels];
+	image->data = new float[image->size.area() * image->channels];
 	assert(image->data);
 
-	for (unsigned int y = 0; y < image->height; y++) {
-		for (unsigned int x = 0; x < image->width; x++) {
-			for (unsigned int c = 0; c < image->channels; c++) {
+	for (int y = 0; y < image->size.y; y++) {
+		for (int x = 0; x < image->size.x; x++) {
+			for (int c = 0; c < image->channels; c++) {
 				png_byte *row = row_pointers[y];
-				int index = DataIndex(image->width, image->height, image->channels, x, y, c);
+				int index = dataIndex(image->size.x, image->size.y, image->channels, x, y, c);
 
 				long element = 0;
 				for (int j = bit_depth / 8 - 1; j >= 0; j--) {
@@ -217,7 +280,6 @@ bool LoadPNG(const std::string &filename, Image *image) {
 	return true;
 }
 
-// TODO(orglofch): Test
 inline
 void WritePNG(const Image &image, const std::string &filename) {
 	FILE *fout = fopen(filename.c_str(), "wb");
@@ -248,19 +310,19 @@ void WritePNG(const Image &image, const std::string &filename) {
 		break;
 	}
 
-	png_set_IHDR(png_ptr, info_ptr, image.width, image.height, 8,
+	png_set_IHDR(png_ptr, info_ptr, image.size.x, image.size.y, 8,
 		color_type,
 		PNG_INTERLACE_NONE,
 		PNG_COMPRESSION_TYPE_DEFAULT,
 		PNG_FILTER_TYPE_DEFAULT);
 	png_write_info(png_ptr, info_ptr);
 
-	png_byte *temp_line = new png_byte[image.width * image.channels];
+	png_byte *temp_line = new png_byte[image.size.x * image.channels];
 
-	for (unsigned int y = 0; y < image.height; ++y) {
-		for (unsigned int x = 0; x < image.width; ++x) {
-			for (unsigned int c = 0; c < image.channels; ++c) {
-				int index = DataIndex(image.width, image.height, image.channels, x, y, c);
+	for (int y = 0; y < image.size.y; ++y) {
+		for (int x = 0; x < image.size.x; ++x) {
+			for (int c = 0; c < image.channels; ++c) {
+				int index = dataIndex(image.size.x, image.size.y, image.channels, x, y, c);
 
 				double value = std::min(1.0f, std::max(0.0f, image.data[index]));
 
