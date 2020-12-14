@@ -330,7 +330,7 @@ union Vector3
 	};
 	struct
 	{
-		double UNUSED_2;
+		double UNUSED_3;
 		Vector2 vw;
 	};
 	double d[3];
@@ -546,9 +546,6 @@ public:
 		d[13] = row4[1];
 		d[14] = row4[2];
 		d[15] = row4[3];
-	}
-	Matrix4x4(double *vals) {
-		std::copy(vals, vals + 16, stdext::checked_array_iterator<double*>(d, 16));
 	}
 
 	Matrix4x4& operator = (const Matrix4x4 &m) {
@@ -945,7 +942,9 @@ size_t quarticRoots(
 static double PolishRoot(
 	size_t degree, double A, double B, double C, double D, double root) {
 	size_t i, j;
-	double x, y, dydx, dx, lastx = HUGE, lasty = HUGE;
+	double x, y, dydx, dx;
+	double lastx = std::numeric_limits<double>::max();
+	double lasty = lastx;
 	double cs[4] = { A, B, C, D };
 
 	x = root;

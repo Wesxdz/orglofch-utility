@@ -173,7 +173,7 @@ Mesh LoadOBJ(const std::string &filename) {
 
 	std::ifstream ifs(filename);
 	if (!ifs.is_open()) {
-		LOG("Failed to open %s\n", filename.c_str());
+		// printf("Failed to open %s\n", filename.c_str());
 		return Mesh();
 	}
 

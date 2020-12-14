@@ -83,10 +83,10 @@ GLuint glLoadShader(const std::string &vs_filename, const std::string &fs_filena
 		GLint max_length;
 		glGetProgramiv(shader, GL_INFO_LOG_LENGTH, &max_length);
 		if (max_length > 0) {
-			char *p_link_info_log = new char[max_length];
-			glGetProgramInfoLog(shader, max_length, &max_length, p_link_info_log);
-			printf("%s\n", p_link_info_log);
-			delete[] p_link_info_log;
+			char *p_link_info_printf = new char[max_length];
+			glGetProgramInfoLog(shader, max_length, &max_length, p_link_info_printf);
+			printf("%s\n", p_link_info_printf);
+			delete[] p_link_info_printf;
 		}
 
 		glDetachShader(shader, vertex_shader);
@@ -108,17 +108,17 @@ GLuint glLoadShader(const std::string &vs_filename, const std::string &fs_filena
 }
 
 void glPrintProgramInfo(GLuint program) {
-	int info_log_len = 0;
+	int info_printf_len = 0;
 	int char_written = 0;
-	GLchar *info_log;
+	GLchar *info_printf;
 
-	glGetShaderiv(program, GL_INFO_LOG_LENGTH, &info_log_len);
+	glGetShaderiv(program, GL_INFO_LOG_LENGTH, &info_printf_len);
 
-	if (info_log_len > 0) {
-		info_log = new GLchar[info_log_len];
-		glGetShaderInfoLog(program, info_log_len, &char_written, info_log);
-		printf("Info: %s\n", info_log);
-		delete[] info_log;
+	if (info_printf_len > 0) {
+		info_printf = new GLchar[info_printf_len];
+		glGetShaderInfoLog(program, info_printf_len, &char_written, info_printf);
+		printf("Info: %s\n", info_printf);
+		delete[] info_printf;
 	}
 }
 
@@ -146,10 +146,10 @@ void glDrawTexturedQuad(GLuint texture) {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glBegin(GL_QUADS);
-	glTexCoord2f(0.0, 0.0); glVertex3f(-1.0, -1.0, -0.0);
-	glTexCoord2f(0.0, 1.0); glVertex3f(1.0, -1.0, -0.0);
-	glTexCoord2f(1.0, 1.0); glVertex3f(1.0, 1.0, -0.0);
-	glTexCoord2f(1.0, 0.0); glVertex3f(-1.0, 1.0, -0.0);
+	glTexCoord2f(0.0, 0.0); glVertex3f(-1.0, -1.0, 0.0);
+	glTexCoord2f(0.0, 1.0); glVertex3f(-1.0, 1.0, 0.0);
+	glTexCoord2f(1.0, 1.0); glVertex3f(1.0, 1.0, 0.0);
+	glTexCoord2f(1.0, 0.0); glVertex3f(1.0, -1.0, 0.0);
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -160,7 +160,7 @@ void glCreateTexture1D(Texture *texture, int width, int channels, void *data) {
 	glEnable(GL_TEXTURE_1D);
 	glGenTextures(1, texture);
 	if (*texture < 1) {
-		LOG("Failed to gen texture\n");
+		// printf("Failed to gen texture\n");
 		return;
 	}
 
@@ -179,7 +179,7 @@ void glCreateTexture2D(Texture *texture, int width, int height, int channels, vo
 	glEnable(GL_TEXTURE_2D);
 	glGenTextures(1, texture);
 	if (*texture < 1) {
-		LOG("Failed to gen texture\n");
+		printf("Failed to gen texture\n");
 		return;
 	}
 
@@ -200,7 +200,7 @@ void glCreateTexture3D(Texture *texture, int width, int height, int depth, int c
 	glEnable(GL_TEXTURE_3D);
 	glGenTextures(1, texture);
 	if (*texture < 1) {
-		LOG("Failed to gen texture\n");
+		// printf("Failed to gen texture\n");
 		return;
 	}
 
@@ -220,7 +220,7 @@ void glCreateTexture3D(Texture *texture, int width, int height, int depth, int c
 void glCreateDepthTexture(Texture *texture) {
 	glGenTextures(1, texture);
 	if (*texture < 1) {
-		LOG("Failed to gen depth texture\n");
+		// printf("Failed to gen depth texture\n");
 		return;
 	}
 

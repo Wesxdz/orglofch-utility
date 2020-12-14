@@ -37,8 +37,8 @@
 #define _DEBUG 0
 #endif
 
-#define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
-#define LOG(fmt, ...) do { if (_DEBUG) { fprintf(stderr, "%s:%d " fmt, __FILENAME__, __LINE__, __VA_ARGS__); } } while(0)
+// #define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
+// #define printf(fmt, ...) do { if (_DEBUG) { fprintf(stderr, "%s:%d " fmt, __FILENAME__, __LINE__, __VA_ARGS__); } } while(0)
 
 #define NOT_REACHED() assert(false)
 #define NOT_NULL(data) assert(data)
@@ -49,7 +49,7 @@ inline
 std::string ReadFile(const char *filename) {
 	std::ifstream file(filename);
 	if (!file.is_open()) {
-		LOG("Unable to open %s\n", filename);
+		// printf("Unable to open %s\n", filename);
 		return "";
 	}
 

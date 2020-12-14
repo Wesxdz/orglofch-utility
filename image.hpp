@@ -122,17 +122,17 @@ bool LoadBMP(const std::string &filename, Image *image) {
 
 	FILE *file = fopen(filename.c_str(), "rb");
 	if (!file) {
-		LOG("Unable to open %s\n", filename.c_str());
+		printf("Unable to open %s\n", filename.c_str());
 		return false;
 	}
 
 	if (fread(header, 1, 54, file) != 54) {
-		LOG("%s is not a BMP file\n", filename.c_str());
+		printf("%s is not a BMP file\n", filename.c_str());
 		return false;
 	}
 
 	if (header[0] != 'B' || header[1] != 'M') {
-		LOG("%s is not a BMP file\n", filename.c_str());
+		printf("%s is not a BMP file\n", filename.c_str());
 		return false;
 	}
 
@@ -173,36 +173,36 @@ bool LoadPNG(const std::string &filename, Image *image) {
 
 	FILE* in = fopen(filename.c_str(), "rb");
 	if (!in) {
-		LOG("Unable to open %s\n", filename.c_str());
+		printf("Unable to open %s\n", filename.c_str());
 		return false;
 	}
 
 	for (int i = 0; i < 8; ++i) {
 		if (!(buf[i] = fgetc(in))) {
-			LOG("Unable to read %s\n", filename.c_str());
+			printf("Unable to read %s\n", filename.c_str());
 			return false;
 		}
 	}
 	if (png_sig_cmp(buf, 0, 8)) {
-		LOG("Bad PNG signature %s\n", filename.c_str());
+		printf("Bad PNG signature %s\n", filename.c_str());
 		return false;
 	}
 
 	png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
 	if (!png_ptr) {
-		LOG("Failed to acquire png_ptr %s\n", filename.c_str());
+		printf("Failed to acquire png_ptr %s\n", filename.c_str());
 		return false;
 	}
 
 	png_infop info_ptr = png_create_info_struct(png_ptr);
 	if (!info_ptr) {
-		LOG("Failed to acquire info_ptr %s\n", filename.c_str());
+		printf("Failed to acquire info_ptr %s\n", filename.c_str());
 		png_destroy_read_struct(&png_ptr, 0, 0);
 		return false;
 	}
 
 	if (setjmp(png_jmpbuf(png_ptr))) {
-		LOG("Failed to setjmp %s\n", filename.c_str());
+		printf("Failed to setjmp %s\n", filename.c_str());
 		png_destroy_read_struct(&png_ptr, 0, 0);
 		return false;
 	}
@@ -216,7 +216,7 @@ bool LoadPNG(const std::string &filename, Image *image) {
 	int bit_depth = png_get_bit_depth(png_ptr, info_ptr);
 	if (bit_depth % 8) {
 		png_destroy_read_struct(&png_ptr, 0, 0);
-		LOG("Invalid bit depth %d, %s\n", bit_depth, filename.c_str());
+		printf("Invalid bit depth %d, %s\n", bit_depth, filename.c_str());
 		return false;
 	}
 
@@ -235,7 +235,7 @@ bool LoadPNG(const std::string &filename, Image *image) {
 		&& colour_type != PNG_COLOR_TYPE_GRAY
 		&& colour_type != PNG_COLOR_TYPE_RGBA) {
 		png_destroy_read_struct(&png_ptr, 0, 0);
-		LOG("Invalid colour_type %d, %s\n", colour_type, filename.c_str());
+		printf("Invalid colour_type %d, %s\n", colour_type, filename.c_str());
 		return false;
 	}
 

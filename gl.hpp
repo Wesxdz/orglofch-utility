@@ -27,7 +27,7 @@
 #include <iostream>
 #include <unordered_map>
 
-#include <GL\glew.h>
+#include <GL/glew.h>
 
 #include "util.hpp"
 
